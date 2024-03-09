@@ -7,6 +7,7 @@ export default async function Home() {
   const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
   const { data: { user } } = await supabase.auth.getUser();
+  console.log(user);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
