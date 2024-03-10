@@ -22,6 +22,8 @@ import Icon from "@mdi/react";
 import { mdiGoogle } from "@mdi/js";
 import { Separator } from "@/components/ui/separator"
 
+// import useGetUser from "@/hooks/useGetUser";
+
 const loginFormSchema = z.object({
     email: z
         .string()
@@ -32,7 +34,7 @@ const loginFormSchema = z.object({
 
 
 const LoginPage = () => {
-
+    // const user = useGetUser();
     const form = useForm<z.infer<typeof loginFormSchema>>({
         resolver: zodResolver(loginFormSchema),
         defaultValues: {
@@ -40,15 +42,35 @@ const LoginPage = () => {
             password: "",
         },
     })
+
     const router = useRouter();
     const supabase = createClientComponentClient();
 
     const signInGoogle = async () => {
         await supabase.auth.signInWithOAuth({
-            provider: "google"
+            provider: "google",
+            options: {
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                },
+            },
         })
         router.refresh();
+        // router.push("/");
     }
+
+    const signInDiscord = async () => {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: "discord"
+        });
+
+        console.log(data);
+        // router.refresh();
+        // router.push("/");
+    }
+
+
 
     // const handleSignUp = async () => {
     //     await supabase.auth.signUp({
@@ -61,11 +83,16 @@ const LoginPage = () => {
     //     router.refresh();
     // }
     const handleLogin = async (values: z.infer<typeof loginFormSchema>) => {
-        await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
             email: values.email,
             password: values.password
         });
-        router.push('/');
+
+        if (error) {
+            console.log(error);
+        }
+        router.refresh();
+        // router.push("/");
     }
     // const handleSignIn = async () => {
     //     await supabase.auth.signInWithPassword({
@@ -121,6 +148,9 @@ const LoginPage = () => {
                             <Button onClick={signInGoogle} variant={"secondary"} className="w-1/2 self-center">
                                 <Icon path={mdiGoogle} size={1} />
                                 Google
+                            </Button>
+                            <Button onClick={signInDiscord} variant={"secondary"} className="w-1/2 self-center">
+                                Discord
                             </Button>
                         </form>
                     </Form>
